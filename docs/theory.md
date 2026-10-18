@@ -220,7 +220,7 @@ This is what happened to many market makers during the 1987 crash (portfolio ins
 - No volatility surface (all options trade at same σ)
 - No bid-ask slippage on hedge execution
 - No market impact on orders
-- No transaction costs on hedge trades
+- A flat $0.01 per share transaction cost on hedge trades; none on option fills
 - Single underlying asset
 - European-style options only (no early exercise)
 

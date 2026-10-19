@@ -28,7 +28,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(9000)
     if SCENARIO:
         page.evaluate(SCENARIO)
-        page.wait_for_timeout(5000)
+        page.wait_for_timeout(9000)
     page.screenshot(path=str(OUT / "dashboard.png"))
     page.screenshot(path=str(OUT / "full-page.png"), full_page=True)
 

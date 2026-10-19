@@ -23,7 +23,7 @@ jobs:
           pip install playwright
           python -m playwright install --with-deps chromium
       - name: Capture screenshots
-        run: python scripts/capture_screenshots.py "scenarioVolSpike()" "showGreekHelp('gamma')"
+        run: python scripts/capture_screenshots.py "scenarioSurge(); setTimeout(scenarioVolSpike, 3500)" "showGreekHelp('gamma')"
       - name: Commit screenshots
         run: |
           git config user.name "github-actions[bot]"

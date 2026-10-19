@@ -573,7 +573,7 @@ table tr:hover td { background: var(--bg-hover); }
       <div class="ticker-item" title="Total P&L of the market-making strategy">
         <span class="label">Total P&L</span>
         <span class="value" id="tickerTotalPnl">$0.00</span>
-        <span class="sub" id="tickerTotalPnlSub">+0.00%</span>
+        <span class="sub" id="tickerTotalPnlSub">marked to model</span>
       </div>
       <div class="ticker-item" title="Current underlying position held as hedge">
         <span class="label">Hedge Shares</span>
@@ -1430,8 +1430,9 @@ function updateUI() {
   const totalHedgePnl = calculateHedgePnl();
   setTicker('tickerHedgePnl', formatPnl(totalHedgePnl), totalHedgePnl >= 0 ? 'var(--green)' : 'var(--red)');
   setTicker('tickerTotalPnl', formatPnl(totalPnl), totalPnl >= 0 ? 'var(--green)' : 'var(--red)');
-  document.getElementById('tickerTotalPnlSub').textContent = `${totalPnl >= 0 ? '+' : ''}${(totalPnl / state.S0 * 100).toFixed(2)}%`;
-  document.getElementById('tickerTotalPnlSub').style.color = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
+  // No capital base is modelled, so show what the figure is rather than a percentage of the share price
+  document.getElementById('tickerTotalPnlSub').textContent = 'marked to model';
+  document.getElementById('tickerTotalPnlSub').style.color = 'var(--text-muted)';
   document.getElementById('tickerHedgeQty').textContent = hedgeQty.toFixed(0);
   document.getElementById('tickerHedgeDetail').textContent = `within ±${state.hedgeThreshold.toFixed(2)}`;
 

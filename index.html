@@ -1091,10 +1091,10 @@ function executeHedge(qty, deltaBefore) {
     ? 'long gamma (delta moves with the hedge direction)'
     : 'gamma neutral';
 
-  log(`Hedge: ${dir} ${absQty.toFixed(0)} shares @ $${state.S.toFixed(2)} | Δ: ${deltaBefore.toFixed(3)} → ${(deltaBefore + qty).toFixed(3)}`, 'hedge');
+  log(`Hedge: ${dir} ${absQty.toFixed(2)} shares @ $${state.S.toFixed(2)} | Δ: ${deltaBefore.toFixed(3)} → ${(deltaBefore + qty).toFixed(3)}`, 'hedge');
   logEdu(
     `Why: Portfolio delta was ${deltaBefore.toFixed(2)} (beyond threshold of ±${state.hedgeThreshold.toFixed(2)}). `
-    + `${dir} ${absQty.toFixed(0)} shares brings net to ${(deltaBefore + qty).toFixed(2)}. `
+    + `${dir} ${absQty.toFixed(2)} shares brings net to ${(deltaBefore + qty).toFixed(2)}. `
     + `Gamma is ${gammaDesc}, meaning future price moves will ${gammaInfo.netGamma < 0 ? 'increase' : 'decrease'} the hedge need.`,
     'Hedging'
   );
@@ -1201,7 +1201,8 @@ function tick() {
   if (state.time >= state.nextOrderTime) {
     const order = generateOrder();
     executeOrder(order);
-    const meanGap = 1 / (currentIntensity * 13);
+    // Poisson arrivals: intensity = expected orders per trading day (time is in years, 252 days/year)
+    const meanGap = 1 / (currentIntensity * 252);
     const gap = -Math.log(1 - Math.random()) * meanGap;
     state.nextOrderTime = state.time + Math.max(gap, state.tickSize);
   }

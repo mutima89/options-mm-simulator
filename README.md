@@ -1,329 +1,134 @@
 <div align="center">
-  <br>
-  <h1>⚡ Options Market Maker</h1>
-  <p><strong>Delta-Neutral Simulator · Educational Edition</strong></p>
-  <p>
-    <em>Learn options market making through real-time simulation.
-    <br>Calculate Greeks. Hedge delta. Understand P&L attribution.</em>
-  </p>
-  <br>
-  <p>
-    <a href="#-features"><img src="https://img.shields.io/badge/Features-📋-8b5cf6?style=for-the-badge" alt="Features"></a>
-    <a href="#-educational-value"><img src="https://img.shields.io/badge/Education-📖-a855f7?style=for-the-badge" alt="Education"></a>
-    <a href="#-quick-start"><img src="https://img.shields.io/badge/Quick_Start-▶-6366f1?style=for-the-badge" alt="Quick Start"></a>
-    <a href="#-theory"><img src="https://img.shields.io/badge/Theory-🎓-8b5cf6?style=for-the-badge" alt="Theory"></a>
-  </p>
-  <br>
-  <p>
-    <img src="https://img.shields.io/badge/Chart.js-4.x-FF6384?style=flat-square&logo=chartdotjs&logoColor=white" alt="Chart.js">
-    <img src="https://img.shields.io/badge/vanilla-JS-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="Vanilla JS">
-    <img src="https://img.shields.io/badge/dependencies-Chart.js_only-22c55e?style=flat-square" alt="Minimal Dependencies">
-    <img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="MIT License">
-    <img src="https://img.shields.io/badge/status-active-22c55e?style=flat-square" alt="Status Active">
-  </p>
-  <br>
+
+# Options Market Maker
+
+**A delta-neutral options market-making simulator, in one HTML file.**
+
+Quote into synthetic options flow, price every contract with Black-Scholes, hedge delta automatically, and watch the book's P&L split into spread, theta, gamma, vega and directional components that reconcile to the true marked-to-model total.
+
+[![Single file](https://img.shields.io/badge/app-single%20HTML%20file-7c3aed)](index.html)
+[![Chart.js](https://img.shields.io/badge/Chart.js-4-FF6384?logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/mutima89/options-mm-simulator)](https://github.com/mutima89/options-mm-simulator/commits)
+
+[Overview](#overview) · [Screenshots](#screenshots) · [Quick start](#quick-start) · [The model](#the-model) · [P&L attribution](#pl-attribution) · [Learning path](#suggested-learning-path)
+
+![Options market-maker dashboard during an order surge and volatility spike](docs/screenshots/dashboard.png)
+
 </div>
 
 ---
 
-## 📋 Overview
+## Overview
 
-**Options Market Maker** is an interactive, real-time browser-based simulator that places you in the seat of a **professional options market maker**. You receive continuous synthetic options order flow, calculate Greeks using Black-Scholes, maintain a delta-neutral portfolio, and watch your P&L decompose into its fundamental drivers.
+| | |
+|---|---|
+| **Order flow** | Poisson-arriving client orders: calls or puts, buy or sell, strikes 80–120% of spot, 1–90 days to expiry, 1–15 contracts |
+| **Pricing** | Black-Scholes prices and Greeks (Δ, Γ, Θ, ν) for every position and the whole book |
+| **Hedging** | Rebalances with the underlying whenever net delta leaves a tolerance band; each hedge share costs $0.01 |
+| **Market** | The underlying follows geometric Brownian motion in 15-minute steps with adjustable volatility and drift |
+| **Attribution** | A waterfall splits P&L into spread, theta, gamma, vega and delta-and-hedge, and shows what the Greeks leave unexplained |
+| **Scenarios** | Vol Spike, Crash, Rally and Order Surge buttons stress the book on demand |
+| **Teaching layer** | Theory panel, click-to-explain Greeks, and an activity log that explains every fill and hedge |
 
-> *"This is not a theory course. This is a live trading desk simulation. Every tick matters."*
+No build step, no backend, no account.
 
-Built as a **single HTML file** — open it in any browser and press Start. No installation, no backend, no configuration.
+## Screenshots
 
-### Who Is This For?
+| Theory panel | Greek explainer |
+|:---:|:---:|
+| ![Theory panel](docs/screenshots/theory-panel.png) | ![Gamma explainer](docs/screenshots/concept-help.png) |
 
-| Audience | Use Case |
-|----------|----------|
-| **Options Traders** | Understand delta-neutral hedging mechanics in a risk-free environment |
-| **Quantitative Students** | See Black-Scholes Greeks in action with live P&L decomposition |
-| **Finance Educators** | Demonstrate gamma/theta tradeoff, convexity, and hedging dynamics |
-| **Aspiring Market Makers** | Practice managing continuous order flow and delta risk |
-| **Self-Taught Programmers** | Explore options theory through an interactive visual tool |
+<details>
+<summary>Full page</summary>
 
----
+![Full simulator page](docs/screenshots/full-page.png)
 
-## ✨ Features
+</details>
 
-### Core Simulation
+## Quick start
 
-| Feature | Description |
-|---------|-------------|
-| **Synthetic Order Flow** | Random options orders arrive continuously (call/put, buy/sell, random strikes/expiries/sizes) |
-| **Black-Scholes Pricing** | All options priced using the full Black-Scholes model |
-| **Real-Time Greeks** | Δ (Delta), Γ (Gamma), Θ (Theta), Ν (Vega) computed for every position and the full portfolio |
-| **Automatic Delta Hedging** | Maintains delta-neutrality within a configurable tolerance threshold |
-| **GBM Price Process** | Underlying price follows Geometric Brownian Motion with configurable σ and μ |
-| **Option Expiry** | Contracts expire at maturity and are settled at intrinsic value |
+1. Download or clone the repository.
+2. Open `index.html` in a modern browser.
+3. Press **Start**.
 
-### Educational Features
+The page loads Chart.js from a CDN, so it needs an internet connection the first time.
 
-| Feature | Description |
-|---------|-------------|
-| **P&L Attribution Waterfall** | Visual breakdown of the true book P&L into Spread, Theta, Gamma, Vega and Delta & Hedge, with the unexplained residual shown |
-| **Greek Explainers** | Click on any Greek label for a popup with formula, interpretation, and MM context |
-| **Educational Theory Panel** | Collapsible sidebar with complete reference: Greeks, hedging mechanics, Black-Scholes, P&L decomposition |
-| **Educational Activity Log** | Color-coded log with plain-English explanations of why events happen |
-| **Scenario Injectors** | "Vol Spike", "Flash Crash", "Rally", and "Order Surge" buttons to test specific conditions |
-| **Gamma / Theta Tradeoff** | Visual cards showing whether you're long/short gamma and what it implies |
+### Controls
 
-### Interactive Controls
+| Control | Range | Effect |
+|---|---|---|
+| Volatility σ | 5–80% | Volatility of the underlying and of Black-Scholes pricing |
+| Drift μ | −20% to +20% | Annual expected return of the underlying |
+| Hedge threshold | 0.01–0.50 | Net delta (in shares) tolerated before rebalancing |
+| Order flow | 1–20 | Expected client orders per trading day |
+| Speed | 1×–5× | One 15-minute step every 250 ms at 2×, 100 ms at 5× |
+| Spread width | 0.5–5.0% | Bid-ask spread as a percentage of theoretical value |
 
-| Control | Range | Purpose |
-|---------|-------|---------|
-| **Volatility (σ)** | 5–80% | Underlying price volatility |
-| **Drift (μ)** | −20% to +20% | Expected annual return of the underlying |
-| **Hedge Threshold** | 0.01–0.50 | Maximum tolerated net delta before rebalancing |
-| **Order Flow** | 1–20 | Frequency of incoming options orders |
-| **Speed** | 1×–5× | Simulation time multiplier |
-| **Spread Width** | 0.5%–5.0% | Bid-ask spread as % of theoretical price |
+## The model
 
----
+- **Underlying:** `dS = S (μ dt + σ √dt Z)` with 15-minute steps (26 per trading day, 252 days per year), risk-free rate 5%.
+- **Pricing:** Black-Scholes for European calls and puts. The normal CDF uses the Abramowitz–Stegun erf approximation evaluated at x/√2, accurate to about 1e-7.
+- **Fills:** the market maker buys at theoretical minus half the spread and sells at theoretical plus half; the difference is booked as spread revenue.
+- **Expiry:** positions settle at intrinsic value.
+- **Contracts:** one contract is one share of underlying (no ×100 multiplier), so Greeks read directly in shares and dollars.
 
-## 🚀 Quick Start
+## P&L attribution
 
-```bash
-# 1. Open the HTML file in any modern browser
-open index.html
-
-# 2. Configure parameters (optional)
-#    - Set volatility, hedge threshold, etc.
-
-# 3. Press "Start"
-#    Orders arrive automatically. Watch the dashboard update in real-time.
-
-# 4. Use scenario buttons to test extreme conditions
-#    - Vol Spike: σ jumps to 60%
-#    - Crash: spot drops 8%
-#    - Rally: spot jumps 6%
-#    - Order Surge: 20× flow intensity for 5 seconds
-
-# 5. Open the "Theory" panel for educational reference
+```text
+Total P&L = Spread + Theta + Gamma + Vega + (Option delta P&L + Hedge P&L − Hedge costs) + Residual
 ```
 
-### System Requirements
+**Total P&L** is the book's real P&L: open options marked to Black-Scholes, realized expiries, and the hedge position after costs. Each component is accumulated step by step from the Greeks:
 
-| Requirement | Detail |
-|-------------|--------|
-| **Browser** | Chrome, Firefox, Edge, Safari (any modern browser) |
-| **Internet** | Required once for Chart.js CDN (cached after first load) |
-| **Dependencies** | Chart.js 4.x (loaded from CDN) |
-| **Storage** | ~200 KB for the HTML file |
-| **OS** | Windows, macOS, Linux |
+| Bucket | Per step | Sign for a typical short-options book |
+|---|---|---|
+| Spread | Fill price versus theoretical value | Positive |
+| Theta | Θ × dt | Positive |
+| Gamma | ½ Γ × dS² | Negative |
+| Vega | ν × dσ (averaged across the change) | Depends on the vol move |
+| Delta & Hedge | Δ × dS plus hedge mark-to-market, minus $0.01/share | Near zero when well hedged |
+| Residual | Total minus the buckets above | Small; grows with large jumps |
 
----
+The residual is shown under the Total bar, so you can see where the Taylor expansion stops being a good description, for example after an 8% crash.
 
-## 🏛️ Architecture
+## Scenarios
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                          Options MM Simulator                       │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌─────────────────┐    ┌──────────────────┐    ┌────────────────┐  │
-│  │  Order Flow     │───▶│  Black-Scholes   │───▶│  Portfolio &   │  │
-│  │  Generator      │    │  Pricing Engine  │    │  Greeks Engine │  │
-│  │  (Poisson)      │    │  (Δ, Γ, Θ, Ν)   │    │  (Aggregation) │  │
-│  └─────────────────┘    └──────────────────┘    └────────┬───────┘  │
-│                                                          │          │
-│                                                          ▼          │
-│  ┌─────────────────┐    ┌──────────────────┐    ┌────────────────┐  │
-│  │  GBM Price      │    │  Delta Hedge     │◀──▶│  Net Delta     │  │
-│  │  Process        │    │  Engine          │    │  Computation   │  │
-│  │  (Underlying)   │    │  (Auto-rebalance)│    │  + Threshold   │  │
-│  └─────────────────┘    └──────────────────┘    └────────────────┘  │
-│                                                          │          │
-│                                                          ▼          │
-│  ┌─────────────────────────────────────────────────────────────────┐ │
-│  │                    P&L Attribution Engine                       │ │
-│  │  Spread (fill)  +  Theta (dt)  +  Gamma (dS²)  +  Hedge (MTM) │ │
-│  └─────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  ┌─────────────────────────────────────────────────────────────────┐ │
-│  │                    UI Rendering (Canvas + DOM)                   │ │
-│  │  Dashboard  ·  Ticker  ·  Charts  ·  Positions Table  ·  Log   │ │
-│  └─────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
-```
+| Button | Effect |
+|---|---|
+| Vol Spike | σ jumps to 60% for about 2 seconds, then reverts |
+| Crash | Spot falls 8% instantly |
+| Rally | Spot rises 6% instantly |
+| Order Surge | Order flow jumps to 20 per day for about 5 seconds |
 
-### Data Flow
+## Suggested learning path
 
-1. **Order Generation** — Poisson process generates options with random parameters (type, strike, expiry, side, quantity)
-2. **Pricing** — Each order is priced at Black-Scholes theoretical value ± spread
-3. **Execution** — The MM fills the order, capturing the spread as P&L
-4. **Greek Computation** — Portfolio Greeks are recalculated after every fill and price move
-5. **Hedge Check** — If |net delta| > threshold, the MM buys/sells underlying shares
-6. **P&L Attribution** — Each tick accumulates theta decay and gamma scalping P&L separately
-7. **UI Update** — All dashboard components refresh in real-time
+1. Start with σ = 15% and a wide threshold (0.20); read the waterfall as positions build.
+2. Tighten the threshold to 0.05: more rebalancing, higher hedge costs.
+3. Hit **Vol Spike** and watch the Vega bar; hit **Crash** and watch Gamma and the residual.
+4. Raise order flow and see how fast the book's Greeks accumulate.
+5. Open the **Theory** panel or click any Greek for its formula and market-making context.
 
----
+Extended notes are in [`docs/theory.md`](docs/theory.md).
 
-## 🎓 Educational Value
+## Project structure
 
-### What You Will Learn
-
-| Concept | How the Simulator Teaches It |
-|---------|------------------------------|
-| **Delta** | Watch net delta change with each fill. See the hedge engine respond to keep it within bounds. |
-| **Gamma** | Observe how gamma determines hedge rebalancing frequency. Short gamma = costly rebalancing during volatile moves. |
-| **Theta** | The P&L waterfall shows theta accumulating steadily over time. Positive theta (short options) vs negative theta. |
-| **Gamma/Theta Tradeoff** | The fundamental tradeoff: long gamma costs theta; short theta costs gamma risk. See it in action. |
-| **Delta-Neutral Hedging** | Automatic hedging demonstrates the mechanics. Tighter thresholds = more frequent rebalancing = higher transaction costs. |
-| **P&L Attribution** | The waterfall chart decomposes every dollar of P&L: spread, theta, gamma, hedge. |
-| **Convexity (Gamma Scalping)** | During rallies and crashes, gamma determines whether the MM buys low / sells high or the opposite. |
-| **Vega Risk** | Use the Vol Spike scenario to see how volatility changes affect option prices. |
-| **Scenario Analysis** | Crash and Rally scenarios test the portfolio's resilience. See how gamma exposure determines the outcome. |
-
-### Suggested Learning Path
-
-1. **Start with low volatility (σ = 15%) and a wide hedge threshold (0.20).** Observe how the system works.
-2. **Watch the P&L waterfall.** Understand which components contribute to total P&L over time.
-3. **Narrow the hedge threshold to 0.05.** Notice the increased hedge frequency — more rebalancing = more transaction costs = lower P&L.
-4. **Hit the "Vol Spike" button.** Watch Vega exposure affect P&L and gamma drive hedge rebalancing.
-5. **Hit the "Crash" button.** Observe how short gamma forces the MM to sell into a falling market.
-6. **Increase order flow intensity.** See how rapid order accumulation strains delta management.
-7. **Experiment with different volatility levels.** Higher vol = more gamma = faster delta changes = more hedging.
-
----
-
-## 📖 Theory
-
-### The Greeks
-
-| Greek | Symbol | Formula | Option MM Relevance |
-|-------|--------|---------|---------------------|
-| **Delta** | Δ | ∂V/∂S | Directional risk — must be hedged to zero |
-| **Gamma** | Γ | ∂²V/∂S² | Convexity — determines hedge rebalancing frequency |
-| **Theta** | Θ | ∂V/∂t | Time decay — primary source of P&L for most MMs |
-| **Vega** | Ν | ∂V/∂σ | Volatility sensitivity — unhedged, but its P&L is attributed |
-
-### P&L Decomposition
-
-```
-Total P&L = Spread Capture + Theta + Gamma + Vega + (Option Delta P&L + Hedge P&L − Hedge Costs) + Residual
-```
-
-Total P&L is the true book P&L: open options marked to Black-Scholes, realized expiries, and the hedge position, after costs. Each bucket is a Taylor-series estimate accumulated tick by tick:
-
-- **Spread Capture** — Fill price versus theoretical value, earned on every fill
-- **Theta** — Θ × dt (positive when net short options)
-- **Gamma** — ½ Γ × dS² (positive when long gamma, negative when short)
-- **Vega** — ν × dσ, from volatility changes such as the Vol Spike scenario
-- **Delta & Hedge** — option Δ × dS plus mark-to-market on the hedge shares, minus a $0.01/share transaction cost; close to zero when the book is well hedged
-- **Residual** — what the first- and second-order terms do not explain (higher-order effects and discrete ticks); shown under the Total bar
-
-### The Gamma/Theta Tradeoff
-
-```
-Long Options:  +Gamma (benefits from volatility)  −Theta (pays time decay)
-Short Options: −Gamma (loses from volatility)     +Theta (earns time decay)
-```
-
-This is the **fundamental tradeoff** in options market making. Most MM strategies are net short (earning theta) and must carefully manage the negative gamma risk. When volatility spikes (like the "Vol Spike" scenario), short-gamma positions bleed P&L as delta ramps against the hedge.
-
----
-
-## 🖥️ Interface Guide
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ ⚡ Options MM · Delta-Neutral Simulator              [Theory] [▶]  │
-├─────────────────────────────────────────────────────────────────────┤
-│ $100.42  Δ +0.08  Γ -0.015  Θ -0.04  P&L +$234  Hedge 0  ✓ Neutral│
-├─────────────────────────────────────────────────────────────────────┤
-│ [Stats Cards: Positions, Trades, Hedges, |Δ|, Γ, Θ, Spread, Vega] │
-├─────────────────────────────────────────────────────────────────────┤
-│ [P&L Waterfall: Spread | Theta | Gamma | Hedge | Total]            │
-├─────────────────────────────────────────────────────────────────────┤
-│ [Delta Exposure Chart — real-time line with threshold bands]       │
-├─────────────────────────────────────────────────────────────────────┤
-│ [Controls: σ | μ | Threshold | Flow | Speed | Spread]  [Scenarios]│
-├─────────────────────────────────────────────────────────────────────┤
-│ [Options Positions Table]          [Activity Log with EDU msgs]    │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Interface Elements
-
-| Element | Location | Purpose |
-|---------|----------|---------|
-| **Ticker Bar** | Top | Real-time summary of key metrics (price, Greeks, P&L, hedge status) |
-| **Stats Cards** | Below ticker | Detailed metrics with color-coded status indicators |
-| **P&L Waterfall** | Mid-page | Visual decomposition of P&L into four components with bar chart |
-| **Delta Chart** | Center | Time series of net delta exposure with threshold bands and hedge markers |
-| **Controls** | Below chart | Sliders for all simulation parameters |
-| **Scenario Buttons** | Right of controls | One-click market event injectors |
-| **Positions Table** | Bottom left | Every open option position with individual Greeks and P&L |
-| **Activity Log** | Bottom right | Color-coded event log with educational annotations |
-| **Theory Panel** | Toggle sidebar | Full educational reference (click "Theory" button in header) |
-
----
-
-## 🛠️ Project Structure
-
-```
+```text
 options-mm-simulator/
-├── index.html            # Complete simulator (single-file, ~900 lines)
-├── README.md             # This file
-├── LICENSE               # MIT License
-└── docs/
-    └── theory.md         # Extended educational theory reference
+├── index.html                         The complete simulator
+├── docs/theory.md                     Extended theory reference
+├── docs/screenshots/
+├── scripts/capture_screenshots.py     Rebuilds the README screenshots (headless Chromium)
+├── .github/workflows/screenshots.yml  Runs that script on GitHub Actions
+└── LICENSE
 ```
 
-Everything lives in a single HTML file. Open it and go.
+## Known limitations
 
-### Technologies
+- Single underlying, flat volatility (no smile or term structure), European exercise only.
+- Hedging is delta-only; vega and gamma are left open.
+- One order can arrive per 15-minute step, which caps very high order-flow settings.
 
-| Technology | Purpose |
-|------------|---------|
-| **HTML5** | Structure |
-| **CSS3** | Dark-themed trading terminal UI with custom properties |
-| **Vanilla JavaScript** | All simulation logic, Black-Scholes math, and UI rendering |
-| **Chart.js 4.x** | Real-time delta exposure chart (loaded from CDN) |
+## License
 
----
-
-## 📜 License
-
-This project is licensed under the **MIT License** — see [`LICENSE`](LICENSE) for the full text.
-
-You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software.
-
----
-
-## 🤝 Contributing
-
-Contributions, bug reports, and feature requests are welcome. Areas for improvement:
-
-- **Implied Volatility surface** — add skew/smile dynamics
-- **Multi-asset portfolio** — support multiple underlyings
-- **Historical backtesting** — replay mode with recorded market data
-- **Advanced hedging** — gamma/theta targeting, vega hedging with other options
-- **Performance analytics** — Sharpe ratio, VaR, max drawdown tracking
-
----
-
-## ⚠️ Disclaimer
-
-This simulation is an **educational tool**. All market data is synthetically generated. Nothing in this software constitutes financial advice, trading recommendations, or investment guidance. Options trading involves substantial risk and is not suitable for all investors.
-
----
-
-<div align="center">
-  <br>
-  <p>
-    <sub>
-      Built with Vanilla JavaScript &middot;
-      <a href="https://www.chartjs.org/">Chart.js</a> &middot;
-      <a href="LICENSE">MIT License</a>
-    </sub>
-  </p>
-  <p>
-    <sub><em>"Know your Greeks, or get wrecked by them."</em></sub>
-  </p>
-  <br>
-</div>
+MIT — see [LICENSE](LICENSE). Educational tool; all market data is synthetic and nothing here is financial advice.

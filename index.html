@@ -207,7 +207,7 @@ body {
 .pnl-waterfall {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: 6px; padding: 12px 16px;
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
 }
 .pnl-bar-group { text-align: center; }
 .pnl-bar-group .pnl-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -563,7 +563,7 @@ table tr:hover td { background: var(--bg-hover); }
       <div class="ticker-item" onclick="showGreekHelp('pnl')" title="Click for explanation">
         <span class="label">Option P&L</span>
         <span class="value" id="tickerPnL">$0.00</span>
-        <span class="sub" id="tickerPnLSub">unrealized</span>
+        <span class="sub" id="tickerPnLSub">options book</span>
       </div>
       <div class="ticker-item" title="P&L from underlying hedge trades">
         <span class="label">Hedge P&L</span>
@@ -672,12 +672,20 @@ table tr:hover td { background: var(--bg-hover); }
           <div style="font-size:9px;color:var(--text-muted)">convexity scalping</div>
         </div>
         <div class="pnl-bar-group">
-          <div class="pnl-label">&#9878; Hedge</div>
+          <div class="pnl-label">&#957; Vega</div>
+          <div class="pnl-bar-container">
+            <div class="pnl-bar" id="pnlBarVega" style="height:2px;background:var(--cyan, #22d3ee);"></div>
+          </div>
+          <div class="pnl-value" id="pnlValVega" style="color:var(--cyan, #22d3ee);">$0</div>
+          <div style="font-size:9px;color:var(--text-muted)">volatility changes</div>
+        </div>
+        <div class="pnl-bar-group">
+          <div class="pnl-label">&#9878; Delta &amp; Hedge</div>
           <div class="pnl-bar-container">
             <div class="pnl-bar" id="pnlBarHedge" style="height:2px;background:var(--blue);"></div>
           </div>
           <div class="pnl-value" id="pnlValHedge" style="color:var(--blue);">$0</div>
-          <div style="font-size:9px;color:var(--text-muted)">underlying trades</div>
+          <div style="font-size:9px;color:var(--text-muted)">net directional, after costs</div>
         </div>
         <div class="pnl-bar-group">
           <div class="pnl-label">Total P&L</div>
@@ -685,7 +693,7 @@ table tr:hover td { background: var(--bg-hover); }
             <div class="pnl-bar" id="pnlBarTotal" style="height:2px;background:var(--text-muted);"></div>
           </div>
           <div class="pnl-value" id="pnlValTotal" style="color:var(--text-primary);">$0</div>
-          <div style="font-size:9px;color:var(--text-muted)" id="pnlAttributionHint">&#8776; Spread + Theta + Gamma + Hedge</div>
+          <div style="font-size:9px;color:var(--text-muted)" id="pnlAttributionHint">Marked to model</div>
         </div>
       </div>
 
@@ -831,8 +839,9 @@ function normPDF(x) {
 function normCDF(x) {
   const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
   const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  // Abramowitz & Stegun 7.1.26 approximates erf(z); N(x) = 0.5 * (1 + erf(x / sqrt(2)))
   const sign = x < 0 ? -1 : 1;
-  x = Math.abs(x);
+  x = Math.abs(x) / Math.SQRT2;
   const t = 1 / (1 + p * x);
   const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
   return 0.5 * (1 + sign * y);
@@ -916,6 +925,12 @@ const state = {
   pnlTheta: 0,      // accumulated theta decay
   pnlGamma: 0,      // accumulated gamma scalping
   pnlHedge: 0,      // hedge trade P&L (mark-to-market)
+  pnlDelta: 0,      // option delta P&L: sum of net option delta x dS
+  pnlVega: 0,       // option vega P&L: sum of net vega x d(sigma)
+  pnlHedgeCost: 0,  // transaction cost paid on hedge trades
+  realizedExpiry: 0,// realized P&L of expired options (payoff - fill)
+  hedgeCostPerShare: 0.01, // $ per share traded when hedging
+  _lastSigma: 0.20,
 
   // For gamma/theta accumulation per tick
   _lastS: 100,
@@ -1061,6 +1076,7 @@ function executeHedge(qty, deltaBefore) {
   };
   state.hedges.push(hedge);
   state.hedgesCount++;
+  state.pnlHedgeCost += Math.abs(qty) * state.hedgeCostPerShare;
 
   // Record hedge P&L will be MTM in calculateHedgePnl()
   // Also track the hedge point on chart
@@ -1131,7 +1147,7 @@ function tick() {
         ? Math.max(state.S - pos.strike, 0)
         : Math.max(pos.strike - state.S, 0);
       const expiryPnl = (payoff - pos.fillPrice) * pos.qty;
-      state.pnlSpread += expiryPnl; // realized at expiry
+      state.realizedExpiry += expiryPnl; // realized at expiry (already earned via theta/gamma/delta)
       const sideStr = pos.qty > 0 ? 'Long' : 'Short';
       const g = calcGreeksForPos(pos, state.S, 0);
       log(`Expired: ${sideStr} ${pos.type==='C'?'CALL':'PUT '} $${pos.strike.toFixed(1)} | payoff: $${(payoff*Math.abs(pos.qty)).toFixed(2)} | P&L: ${formatPnlStr(expiryPnl)}`, 'system');
@@ -1159,6 +1175,23 @@ function tick() {
   const avgGamma = (prevGreeks.netGamma + currentGreeks.netGamma) / 2;
   const gammaContrib = 0.5 * avgGamma * (state.S - prevS) * (state.S - prevS);
   state.pnlGamma += gammaContrib;
+
+  // Delta: first-order P&L of the option book from the price move
+  state.pnlDelta += prevGreeks.netDelta * (state.S - prevS);
+
+  // Vega: P&L from volatility changes (scenarios and their reversion); vega is per 1.00 of sigma
+  const dSigma = state.sigma - state._lastSigma;
+  if (dSigma !== 0) {
+    // Trapezoid rule: average the book's vega at the old and new volatility (large jumps are convex in sigma)
+    // (sigma can change before the tick via a scenario or inside it on reversion, so evaluate both explicitly)
+    const sigmaNow = state.sigma;
+    state.sigma = state._lastSigma;
+    const vegaOld = computePortfolioGreeks(prevS).netVega;
+    state.sigma = sigmaNow;
+    const vegaNew = computePortfolioGreeks(prevS).netVega;
+    state.pnlVega += 0.5 * (vegaOld + vegaNew) * dSigma;
+  }
+  state._lastSigma = state.sigma;
 
   // Update hedge P&L (mark-to-market)
   state.pnlHedge = calculateHedgePnl();
@@ -1207,7 +1240,7 @@ function gaussianRandom() {
 // ============================================================
 function scenarioVolSpike() {
   state.sigmaOverride = 0.60;
-  state.sigmaOverrideUntil = state.time + 2 * state.speed * state.tickSize; // ~2 seconds at current speed
+  state.sigmaOverrideUntil = state.time + 4 * state.speed * state.tickSize; // ~2 seconds (2*speed ticks per second)
   state.sigma = 0.60;
   logEdu('VOLATILITY SPIKE: σ jumped from ' + (state.sigmaBase * 100).toFixed(0) + '% to 60%! Vega exposure will cause option prices to surge.', 'Scenario');
   if (!state.running) log('Scenario ready. Press Start first.', 'system');
@@ -1230,7 +1263,7 @@ function scenarioRally() {
 function scenarioSurge() {
   if (state.running) {
     state.intensityOverride = 20;
-    state.intensityOverrideUntil = state.time + 5 * state.speed * state.tickSize * 3;
+    state.intensityOverrideUntil = state.time + 10 * state.speed * state.tickSize; // ~5 seconds
     logEdu('ORDER SURGE: Flow intensity maxed to 20x for ~5 seconds. Prepare for rapid fills and delta accumulation!', 'Scenario');
   } else {
     log('Start the simulation first.', 'system');
@@ -1372,7 +1405,13 @@ function updateUI() {
   const hedgeQty = getHedgeQuantity();
   const totalExposure = greeks.netDelta + hedgeQty;
   const hedgePnl = state.pnlHedge;
-  const totalPnl = state.pnlSpread + state.pnlTheta + state.pnlGamma + hedgePnl;
+  // Directional P&L: option delta P&L plus hedge mark-to-market, after hedge costs (near zero when well hedged)
+  const directionalPnl = state.pnlDelta + hedgePnl - state.pnlHedgeCost;
+  // True book P&L: options marked to Black-Scholes + realized expiries + hedges - costs
+  const optionsPnl = greeks.unrealizedPnl + state.realizedExpiry;
+  const totalPnl = optionsPnl + hedgePnl - state.pnlHedgeCost;
+  const explained = state.pnlSpread + state.pnlTheta + state.pnlGamma + state.pnlVega + directionalPnl;
+  const residual = totalPnl - explained;
 
   // --- Ticker ---
   const priceChange = state.S - state.S0;
@@ -1386,7 +1425,7 @@ function updateUI() {
   setTicker('tickerDelta', greeks.netDelta.toFixed(2), Math.abs(totalExposure) > state.hedgeThreshold * 2 ? 'var(--red)' : Math.abs(totalExposure) > state.hedgeThreshold ? 'var(--yellow)' : (greeks.netDelta >= 0 ? 'var(--green)' : 'var(--red)'));
   setTicker('tickerGamma', greeks.netGamma.toFixed(3), greeks.netGamma < 0 ? 'var(--red)' : 'var(--green)');
   setTicker('tickerTheta', greeks.netTheta.toFixed(2), greeks.netTheta < 0 ? 'var(--red)' : 'var(--green)');
-  setTicker('tickerPnL', formatPnl(state.pnlSpread + greeks.unrealizedPnl), (state.pnlSpread + greeks.unrealizedPnl) >= 0 ? 'var(--green)' : 'var(--red)');
+  setTicker('tickerPnL', formatPnl(optionsPnl), optionsPnl >= 0 ? 'var(--green)' : 'var(--red)');
   const totalHedgePnl = calculateHedgePnl();
   setTicker('tickerHedgePnl', formatPnl(totalHedgePnl), totalHedgePnl >= 0 ? 'var(--green)' : 'var(--red)');
   setTicker('tickerTotalPnl', formatPnl(totalPnl), totalPnl >= 0 ? 'var(--green)' : 'var(--red)');
@@ -1437,13 +1476,14 @@ function updateUI() {
   document.getElementById('simTimeLabel').textContent = formatTime(state.time);
 
   // --- P&L Waterfall ---
-  const maxAbsPnl = Math.max(Math.abs(state.pnlSpread), Math.abs(state.pnlTheta), Math.abs(state.pnlGamma), Math.abs(hedgePnl), Math.abs(totalPnl), 1);
+  const maxAbsPnl = Math.max(Math.abs(state.pnlSpread), Math.abs(state.pnlTheta), Math.abs(state.pnlGamma), Math.abs(state.pnlVega), Math.abs(directionalPnl), Math.abs(totalPnl), 1);
   updatePnlBar('pnlBarSpread', 'pnlValSpread', state.pnlSpread, maxAbsPnl, 'var(--green)');
   updatePnlBar('pnlBarTheta', 'pnlValTheta', state.pnlTheta, maxAbsPnl, 'var(--yellow)');
   updatePnlBar('pnlBarGamma', 'pnlValGamma', state.pnlGamma, maxAbsPnl, 'var(--accent)');
-  updatePnlBar('pnlBarHedge', 'pnlValHedge', hedgePnl, maxAbsPnl, 'var(--blue)');
+  updatePnlBar('pnlBarVega', 'pnlValVega', state.pnlVega, maxAbsPnl, 'var(--cyan, #22d3ee)');
+  updatePnlBar('pnlBarHedge', 'pnlValHedge', directionalPnl, maxAbsPnl, 'var(--blue)');
   updatePnlBar('pnlBarTotal', 'pnlValTotal', totalPnl, maxAbsPnl, 'var(--text-primary)');
-  document.getElementById('pnlAttributionHint').textContent = `≈ Spread + Theta + Gamma + Hedge (residual: $${(totalPnl - state.pnlSpread - state.pnlTheta - state.pnlGamma - hedgePnl).toFixed(2)})`;
+  document.getElementById('pnlAttributionHint').textContent = `Marked to model · unexplained residual: $${residual.toFixed(2)}`;
 
   // --- Positions ---
   renderPositions(greeks);
@@ -1810,6 +1850,11 @@ function resetSim() {
   state.pnlTheta = 0;
   state.pnlGamma = 0;
   state.pnlHedge = 0;
+  state.pnlDelta = 0;
+  state.pnlVega = 0;
+  state.pnlHedgeCost = 0;
+  state.realizedExpiry = 0;
+  state._lastSigma = state.sigmaBase;
   state.trades = 0;
   state.hedgesCount = 0;
   state.orderIdCounter = 0;

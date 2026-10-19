@@ -63,7 +63,7 @@ Built as a **single HTML file** — open it in any browser and press Start. No i
 
 | Feature | Description |
 |---------|-------------|
-| **P&L Attribution Waterfall** | Visual breakdown of P&L into Spread, Theta, Gamma, and Hedge components |
+| **P&L Attribution Waterfall** | Visual breakdown of the true book P&L into Spread, Theta, Gamma, Vega and Delta & Hedge, with the unexplained residual shown |
 | **Greek Explainers** | Click on any Greek label for a popup with formula, interpretation, and MM context |
 | **Educational Theory Panel** | Collapsible sidebar with complete reference: Greeks, hedging mechanics, Black-Scholes, P&L decomposition |
 | **Educational Activity Log** | Color-coded log with plain-English explanations of why events happen |
@@ -199,19 +199,22 @@ open index.html
 | **Delta** | Δ | ∂V/∂S | Directional risk — must be hedged to zero |
 | **Gamma** | Γ | ∂²V/∂S² | Convexity — determines hedge rebalancing frequency |
 | **Theta** | Θ | ∂V/∂t | Time decay — primary source of P&L for most MMs |
-| **Vega** | Ν | ∂V/∂σ | Volatility sensitivity — unhedged in this simulation |
+| **Vega** | Ν | ∂V/∂σ | Volatility sensitivity — unhedged, but its P&L is attributed |
 
 ### P&L Decomposition
 
 ```
-Total P&L ≈ Spread Capture + Theta Decay + Gamma Scalping + Hedge P&L
+Total P&L = Spread Capture + Theta + Gamma + Vega + (Option Delta P&L + Hedge P&L − Hedge Costs) + Residual
 ```
 
-Where:
-- **Spread Capture** — Compensation for liquidity provision (earned on every fill)
-- **Theta Decay** — Time value erosion (positive when net short options)
-- **Gamma Scalping** — Convexity P&L from delta rebalancing (positive when long gamma, negative when short)
-- **Hedge P&L** — Mark-to-market on underlying shares held as delta hedge
+Total P&L is the true book P&L: open options marked to Black-Scholes, realized expiries, and the hedge position, after costs. Each bucket is a Taylor-series estimate accumulated tick by tick:
+
+- **Spread Capture** — Fill price versus theoretical value, earned on every fill
+- **Theta** — Θ × dt (positive when net short options)
+- **Gamma** — ½ Γ × dS² (positive when long gamma, negative when short)
+- **Vega** — ν × dσ, from volatility changes such as the Vol Spike scenario
+- **Delta & Hedge** — option Δ × dS plus mark-to-market on the hedge shares, minus a $0.01/share transaction cost; close to zero when the book is well hedged
+- **Residual** — what the first- and second-order terms do not explain (higher-order effects and discrete ticks); shown under the Total bar
 
 ### The Gamma/Theta Tradeoff
 
